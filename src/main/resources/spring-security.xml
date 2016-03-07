@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bean:beans
+	xmlns:bean="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:c="http://www.springframework.org/schema/c"
+	xmlns="http://www.springframework.org/schema/security"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+		http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://www.springframework.org/schema/security
+		http://www.springframework.org/schema/security/spring-security-3.2.xsd">
+
+	<global-method-security secured-annotations="enabled"/>
+
+	
+	<http realm="Protected API"
+		use-expressions="true"
+		create-session="stateless"
+		entry-point-ref="unauthorizedEntryPoint"
+		authentication-manager-ref="restAuthenticationManager">
+
+		<!-- <anonymous enabled="true"/> -->
+		<custom-filter ref="restAuthenticationFilter" position="BASIC_AUTH_FILTER"/>
+		
+		<intercept-url pattern="/getallchecklist/**" access="hasAnyRole('Admin,QC Analyst-1,QC Analyst-2,Fit 1,Fit 2')" />
+		<intercept-url pattern="/checklist/**" access="hasAnyRole('Admin,QC Analyst-1,QC Analyst-2,Fit 1,Fit 2')"/>
+		<intercept-url pattern="/getallclassification/**" access="hasAnyRole('Admin,QC Analyst-1,QC Analyst-2,Fit 1,Fit 2')"/>
+		<intercept-url pattern="/comments/**" access="hasAnyRole('Admin,QC Analyst-1,QC Analyst-2,Fit 1,Fit 2')"/>
+		<intercept-url pattern="/qualitycheck/**" access="hasAnyRole('Admin,QC Analyst-1,QC Analyst-2,Fit 1,Fit 2')"/>
+		<intercept-url pattern="/inventory/auditpanel/**" access="hasAnyRole('Admin,Inventory Count Manager,Inventory Count User')"/>
+<!-- 		<intercept-url pattern="/order/**" access="hasAnyRole('Admin,QC Analyst-1,QC Analyst-2,Fit 1,Fit 2,Picking Panel Picker,Picking Panel Manager,Picking Panel Manager')"/> -->
+		
+		<!-- <intercept-url pattern="/getUwOrderDetails/**" access="hasAnyRole('10,11')"/> -->
+		
+	</http>
+	
+	<bean:bean id="unauthorizedEntryPoint" class="com.lenskart.wm.security.springsecurity.UnauthorizedEntryPoint"/>
+
+	<bean:bean id="userDetailService" class="com.lenskart.wm.security.springsecurity.MyUserDetailsService"/>
+
+	<authentication-manager id="restAuthenticationManager">
+		<authentication-provider user-service-ref="userDetailService">
+			
+		</authentication-provider>
+	</authentication-manager>
+
+	<bean:bean id="tokenManager" class="com.lenskart.wm.security.springsecurity.TokenManagerSingle"/>
+
+	<bean:bean id="authenticationService" class="com.lenskart.wm.security.springsecurity.AuthenticationServiceDefault"
+		c:authenticationManager-ref="restAuthenticationManager" c:tokenManager-ref="tokenManager"/>
+
+	<bean:bean id="restAuthenticationFilter" class="com.lenskart.wm.security.springsecurity.TokenAuthenticationFilter"
+		c:authenticationService-ref="authenticationService" c:logoutLink="/logout"/>
+</bean:beans>
