@@ -1,52 +1,122 @@
-var zeusModule = angular.module('Zeus', ['ui.router']);
+var zeusModule = angular.module('Zeus', ['ui.router', 'angular-growl']);
 
-/*zeusModule.factory('AngelloHelper', function() {
-    var buildIndex = function (source, property) {
-        var tempArray = [];
+//Growl configuraton
+zeusModule.config(['growlProvider', function(growlProvider) {
+    growlProvider.globalTimeToLive(5000);
+    growlProvider.onlyUniqueMessages(false);
+    growlProvider.globalReversedOrder(true);
+}]);
 
-        for (var i = 0, len = source.length; i < len; ++i) {
-            tempArray[source[i][property]] = source[i];
-        }
 
-        return tempArray;
-    };
-
-    return {
-        buildIndex: buildIndex
-    };
-});*/
-
-zeusModule.service('DirectoryService', function($http) {
+zeusModule.service('BuildService', function($http, $rootScope) {
     var service = this;
+    var buildDetails = {};
+    
+    service.setBuildDetails = function(buildName, buildPath){
+    	buildDetails["name"] = buildName;
+    	buildDetails["path"] = buildPath;
+    	$rootScope.$broadcast('buildDetailsSetEvent', {
+            data: buildDetails
+        });
+    }
+    
+    service.getBuildDetails = function(){
+    	return buildDetails;
+    }
+    
+});
 
-    service.getFiles = function (directory) {
-    	$http.get("/directory/"+directory+"/files").success(function(response) {
-     		if(response.responseCode == "OK"){
-     			addresses = JSON.parse(response.responseContent);
-     			addresses.forEach(function(address){
-     			   if(address.addressType.toLowerCase() == "shipping"){
-     				  $scope.customerAddress = address;
-     			   }	
-     			})
-     			
-     		}
+zeusModule.controller('MainCtrl', function(BuildService, $scope, $http, $state, growl) {
+
+	$scope.getFiles = function(directory){
+		$scope.directoryPath = directory;
+		$http({
+			url : "/files",
+			method : "GET",
+			params : {directory : directory} 
+		}).success(function(response) {
+     		$scope.result = response;
      	}).error(function(response){
-     		console.log("Customer Address loading error.");
+     		console.log("Error in loading data");
      	});
-    };
+	}
+	
+	$scope.build = function(name, path){
+		BuildService.setBuildDetails(name, path);
+	}
+	
 });
 
-zeusModule.controller('MainCtrl', function(DirectoryService, $scope, $http, $state) {
-    var main = this;
+zeusModule.controller('BuildController', function(BuildService, $scope, $http, $state, growl) {
+	$scope.$on('buildDetailsSetEvent', function(event, data) {
+        loadBuildData();
+    })
+	$scope.showProcessList = false;
+	loadBuildData = function(){
+		var details = BuildService.getBuildDetails();
+		if(Object.keys(details).length > 0){
+			$scope.buildDetails = details;
+			$scope.buildDetails.environment = 'development';
+			$scope.buildDetails.comments = "Building file.";
+			$scope.buildDetails.email = "";
+			//check the other java processes if running
+			$scope.showProcessList = true;
+			getProcessDetails();
+			
+		}
+	}
+	
+	$scope.showProcesses = function(){
+		$scope.showProcessList = !$scope.showProcessList;
+		if($scope.showProcessList)
+		 getProcessDetails();
+	}
+	
+	$scope.build = function(){
+		$http({
+	        url: '/build',
+	        method: "POST",
+	        data: JSON.stringify($scope.buildDetails),
+	    }).success(function(response) {
+	    	growl.success("Build deployed successfully");	
+		}).error(function(response){
+			growl.error("Build deployment unsuccessful");
+		});
 
-    main.files = DirectoryService.getFiles('archive');
-    console.log(main.files);
+	}
+		
+	getProcessDetails = function(){
+		$http.get("/show_java_processes").success(function(response){
+			if(response.length > 0){
+				$scope.processDetailsList = response;
+			}
+		}).error(function(response){
+	 		console.log("Error in loading process data");
+	 	});
+	}
+	
+	$scope.killProcess = function(pid){
+		var r = confirm("Killing a process. Are you sure dude!");
+	    if (r == true) {
+	    	$http.get("/kill_process/" + pid).success(function(response){
+				growl.success("Process killed successfully");
+				getProcessDetails();
+			}).error(function(response){
+				growl.error("Process kill unsuccessful");
+		 	});
+	    } else {
+	        alert("Phewww. You saved it.");
+	    }
+	}
+	
 });
 
-/*zeusModule.directive('story', function() {
+zeusModule.directive('breadcrumb', function() {
     return {
         scope: true,
         replace: true,
-        template: '<div><h4>{{story.title}}</h4><p>{{story.description}}</p></div>'
+        templateUrl: 'src/zeus/app/breadcrumb.html'
     }
-});*/
+});
+
+

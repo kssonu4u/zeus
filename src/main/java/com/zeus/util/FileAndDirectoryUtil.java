@@ -4,9 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 
-import org.junit.runners.model.InitializationError;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.util.FileSystemUtils;
 
 public class FileAndDirectoryUtil {
 	
@@ -27,6 +25,12 @@ public class FileAndDirectoryUtil {
 		return newFile;
 	}
 	
+	public void moveFile(String source, String destination) throws IOException{
+		File src = new File(source);
+		File dest = new File(destination);
+		FileSystemUtils.copyRecursively(src, dest);
+		FileSystemUtils.deleteRecursively(src);
+	}
 	
 	
 }

@@ -1,63 +1,130 @@
 package com.zeus.controller;
 
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.attribute.BasicFileAttributes;
-import java.text.SimpleDateFormat;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.file.FileSystemException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.zeus.model.BuildDetails;
+import com.zeus.service.FilesService;
 
 @RestController
 public class FilesController {
 	
 	@Value("${base.directory.path}")
 	private String baseDirectoryPath;
-	
+
 	private static final String ARCHIVE = "archive"; 
 	private static final String LIVE = "live";
 	private static final Logger logger = LogManager.getLogger(FilesController.class);
-	private String DATE_FORMAT = "EEE, d MMM yyyy HH:mm:ss z";
    
-	@RequestMapping(value="/directory/{directory}/files", method = RequestMethod.GET)
-	public @ResponseBody String listFiles(@PathVariable("directory") String directory){
+	@RequestMapping(value="/files", method = RequestMethod.GET)
+	public @ResponseBody String listFiles(@RequestParam(value="directory", required = true) String directory) throws FileSystemException{
 		try {
-			File dir = new File(baseDirectoryPath + "/" + directory);
-			File[] fileList = dir.listFiles();
-
-			List<JSONObject> resultList = new ArrayList<JSONObject>();
-			SimpleDateFormat dt = new SimpleDateFormat(DATE_FORMAT);
-			if (fileList != null) {
-				// Calendar cal = Calendar.getInstance();
-				for (File f : fileList) {
-					if (!f.exists()) {
-						continue;
-					}
-					BasicFileAttributes attrs = Files.readAttributes(f.toPath(), BasicFileAttributes.class);
-					JSONObject el = new JSONObject();
-					el.put("name", f.getName());
-					el.put("date", dt.format(new Date(attrs.lastModifiedTime().toMillis())));
-					el.put("size", f.length());
-					el.put("type", f.isFile() ? "file" : "dir");
-					resultList.add(el);
-				}
-			}
-
-			return new JSONObject().put("result", resultList).toString();
+			List<JSONObject> resultList = filesService.getFilesAndAttributes(directory);
+			return resultList.toString();
 		} catch (Exception e) {
-			logger.error("list", e);
+			logger.error(String.format("Error in getting directory data. Directory = %s, Exception message = %s", directory, e.getMessage()) , e);
+			throw new FileSystemException("Unable to list files. Try Again.");
+		}
+	}
+	
+	public void moveFile(@RequestParam(value = "source", required = true ) String source, @RequestParam(value = "destination", required = true) String destination) throws Exception{
+		filesService.moveFile(source, destination);
+	}
+	
+	@RequestMapping(value="/build_history")
+	public @ResponseBody List<BuildDetails> buildHistory(@RequestParam(value="file", required = true) String file, @RequestParam(value="path", required = true) String path) throws Exception{
+		try{
+			return filesService.getBuildHistory(file, path);
+		}catch(Exception e){
+			logger.error(String.format("Error in getting build history. File : %s, Path : %s", file, path), e);
+			throw e;
+		}
+		
+	}
+	
+	@RequestMapping(value="/build", method = RequestMethod.POST)
+	public @ResponseBody String build(@RequestBody BuildDetails buildDetails) throws Exception{
+		try{
+			StringBuilder cmd = new StringBuilder(" nohup java -jar ");
+			cmd.append(baseDirectoryPath + buildDetails.getPath() + "/" + buildDetails.getName());
+			if(!"development".equalsIgnoreCase(buildDetails.getEnvironment())){
+				cmd.append(" --spring.profiles.active=" + buildDetails.getEnvironment());
+			}
+			Process processes = Runtime.getRuntime().exec(cmd.append(" &").toString());
+			System.out.println(buildDetails);
+		}catch(Exception e){
+			logger.error(String.format("Error in building. File : %s, Path : %s", buildDetails.getName(), buildDetails.getPath()), e);
+			throw e;
 		}
 		return null;
+		
 	}
+	
+	@RequestMapping(value="/show_java_processes", method = RequestMethod.GET)
+	public @ResponseBody String showJavaProcesses() throws IOException{
+		try{
+			Process processes = Runtime.getRuntime().exec("ps o user=,pid=,stime=,cmd= -C java");
+			System.out.println(processes);
+			String process;
+			List<JSONObject> processDetails = new ArrayList<JSONObject>();
+			BufferedReader input = new BufferedReader(new InputStreamReader(processes.getInputStream()));
+			while ((process = input.readLine()) != null) {
+				if(process.contains(".jar") || process.contains(".war")){
+					JSONObject tempData = new JSONObject();
+					String[] param = process.trim().replaceAll("\\s+", " ").split(" ");
+					tempData.put("user", param[0]);
+					tempData.put("pid", param[1]);
+					tempData.put("stime", param[2]);
+					for(int i=3;i<param.length;i++){
+						if(param[i].contains(".war") || param[i].contains(".jar")){
+							tempData.put("name", param[i]);
+							break;
+						}
+					}
+					processDetails.add(tempData);
+				}
+			}
+			
+			input.close();
+			return processDetails.toString();
+		}catch(Exception e){
+			logger.error(String.format("Error in getting process data. Exception message = %s", e.getMessage()) , e);
+			throw e;
+		}
+	}
+	
+	@RequestMapping(value="kill_process/{pid}", method=RequestMethod.GET)
+	public void killProcess(@PathVariable(value="pid") String pid) throws IOException{
+		try{
+			Process p = Runtime.getRuntime().exec("ps -p " + pid);
+			if(p != null){
+				Runtime.getRuntime().exec("kill -9 " + pid);
+			}
+		}catch(Exception e){
+			logger.error(String.format("Error in killing process. Pid = %s, Exception message = %s", pid, e.getMessage()) , e);
+			throw e;
+		}
+		
+	}
+	
+	@Autowired
+	FilesService filesService;
 	
 }

@@ -1,0 +1,6 @@
+<ol class="breadcrumb">
+  <li ng-repeat="directory in directoryPath.split('/') | limitTo:(directoryPath.split('/').length-1)">
+    <a ng-click="getFiles((directoryPath | limitTo : directoryPath.indexOf(directory)) + directory)">{{directory}}</a>
+  </li> 
+  <li ng-repeat="directory in directoryPath.split('/') | limitTo: -1" class="active">{{directory}}</li>
+</ol>

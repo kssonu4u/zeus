@@ -1,12 +1,9 @@
 package com.zeus.util;
 
-import java.io.File;
-
 import javax.annotation.PostConstruct;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.junit.runners.model.InitializationError;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -40,7 +37,7 @@ public class InitProject {
 			logger.info("************* SYSTEM INITIALIZED *************");
 		}catch(Exception e){
 			logger.error("Directory Structure creation failed. Unable to initialize application.", e);
-			throw new InitializationError("Directory Structure creation failed. Unable to initialize application.");
+			throw new RuntimeException("Directory Structure creation failed. Unable to initialize application.");
 		}
 	}
 }
