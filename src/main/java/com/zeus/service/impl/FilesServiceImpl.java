@@ -80,6 +80,12 @@ public class FilesServiceImpl implements FilesService{
 		return buildDetailsRepository.findByNameAndPath(file, path);
 	}
 	
+	@Override
+	public void saveBuildHistory(BuildDetails buildDetails){
+		if(buildDetails != null)
+			buildDetailsRepository.save(buildDetails);
+	}
+	
 	@Autowired
 	BuildDetailsRepository buildDetailsRepository;
 	private static final Logger logger = LogManager.getLogger(FilesService.class);

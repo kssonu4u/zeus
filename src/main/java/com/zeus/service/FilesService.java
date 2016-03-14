@@ -13,4 +13,5 @@ public interface FilesService {
 	List<JSONObject> getFilesAndAttributes(String path);
     void moveFile(String source, String destination) throws IOException;
 	List<BuildDetails> getBuildHistory(String file, String path) throws Exception;
+	void saveBuildHistory(BuildDetails buildDetails);
 }

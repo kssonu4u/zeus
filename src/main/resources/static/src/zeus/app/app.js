@@ -37,11 +37,11 @@ zeusModule.controller('MainCtrl', function(BuildService, $scope, $http, $state, 
 		}).success(function(response) {
      		$scope.result = response;
      	}).error(function(response){
-     		console.log("Error in loading data");
+     		growl.error("Error in loading data");
      	});
 	}
 	
-	$scope.build = function(name, path){
+	$scope.buildSection = function(name, path){
 		BuildService.setBuildDetails(name, path);
 	}
 	
@@ -51,19 +51,35 @@ zeusModule.controller('BuildController', function(BuildService, $scope, $http, $
 	$scope.$on('buildDetailsSetEvent', function(event, data) {
         loadBuildData();
     })
+    
 	$scope.showProcessList = false;
+	$scope.showBuildSection = false;
+	
 	loadBuildData = function(){
 		var details = BuildService.getBuildDetails();
 		if(Object.keys(details).length > 0){
 			$scope.buildDetails = details;
 			$scope.buildDetails.environment = 'development';
 			$scope.buildDetails.comments = "Building file.";
-			$scope.buildDetails.email = "";
 			//check the other java processes if running
 			$scope.showProcessList = true;
+			$scope.showBuildSection = true;
 			getProcessDetails();
+			getBuildHistory($scope.buildDetails.name, $scope.buildDetails.path);
 			
 		}
+	}
+	
+	getBuildHistory = function(name, path){
+		$http({
+			url : "/build_history",
+			method : "GET",
+			params : {file : name, path : path} 
+		}).success(function(response) {
+     		$scope.buildHistory = response;
+     	}).error(function(response){
+     		growl.error('Error in loading build history.');
+     	});
 	}
 	
 	$scope.showProcesses = function(){
@@ -91,7 +107,7 @@ zeusModule.controller('BuildController', function(BuildService, $scope, $http, $
 				$scope.processDetailsList = response;
 			}
 		}).error(function(response){
-	 		console.log("Error in loading process data");
+			growl.error("Error in loading process data");
 	 	});
 	}
 	

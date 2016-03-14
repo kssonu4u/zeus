@@ -68,6 +68,7 @@ public class FilesController {
 				cmd.append(" --spring.profiles.active=" + buildDetails.getEnvironment());
 			}
 			Process processes = Runtime.getRuntime().exec(cmd.append(" &").toString());
+			filesService.saveBuildHistory(buildDetails);
 			System.out.println(buildDetails);
 		}catch(Exception e){
 			logger.error(String.format("Error in building. File : %s, Path : %s", buildDetails.getName(), buildDetails.getPath()), e);
