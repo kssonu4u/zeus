@@ -1,7 +1,3 @@
-create database if not exists zeus;
-
-use zeus;
-
 CREATE TABLE if not exists build_details
 (
 id int NOT NULL PRIMARY KEY AUTO_INCREMENT,

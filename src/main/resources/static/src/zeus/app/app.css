@@ -33,3 +33,6 @@
 	text-align:center;
 }
 
+.popover-content {
+    word-break: break-all;
+}

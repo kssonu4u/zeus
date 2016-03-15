@@ -12,6 +12,7 @@ public class InitProject {
 	@Value("${base.directory.path}")
 	private String baseDirectoryPath;
 	
+	private static final String BUILDER = "builder";
 	private static final String ARCHIVE = "archive"; 
 	private static final String LIVE = "live";
 	
@@ -23,15 +24,15 @@ public class InitProject {
 		try{
 			FileAndDirectoryUtil fileAndDirectoryUtil = new FileAndDirectoryUtil();
 			logger.info("Step 1 : Creating builder....");
-			fileAndDirectoryUtil.addFolder(baseDirectoryPath);
+			fileAndDirectoryUtil.addFolder(baseDirectoryPath + "/" + BUILDER );
 			logger.info("builder created.");
 			
 			logger.info("Step 2 : Creating archive....");
-			fileAndDirectoryUtil.addFolder(baseDirectoryPath + "/" + ARCHIVE);
+			fileAndDirectoryUtil.addFolder(baseDirectoryPath + "/" + BUILDER + "/" + ARCHIVE);
 			logger.info("archive created.");
 			
 			logger.info("Step 3 : Creating live....");
-			fileAndDirectoryUtil.addFolder(baseDirectoryPath + "/" + LIVE);
+			fileAndDirectoryUtil.addFolder(baseDirectoryPath + "/" + BUILDER + "/" + LIVE);
 			logger.info("live created.");
 			
 			logger.info("************* SYSTEM INITIALIZED *************");

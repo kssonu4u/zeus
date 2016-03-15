@@ -64,7 +64,9 @@
 				     </tr>
 				    </thead>
 				    <tr ng-repeat = "process in processDetailsList">
-				       <td>{{process.name | limitTo : 40}}</td>
+				       <td>{{process.name | limitTo:40}}
+				       <p uib-popover="{{process.name}}" popover-trigger="mouseenter" type="button" class="btn btn-default">....more</p>
+				       </td>
 				       <td>{{process.pid}}</td>
 				       <td>{{process.user}} </td>
 				       <td>{{process.stime}} </td>

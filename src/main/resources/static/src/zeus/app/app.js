@@ -1,4 +1,4 @@
-var zeusModule = angular.module('Zeus', ['ui.router', 'angular-growl']);
+var zeusModule = angular.module('Zeus', ['ui.router', 'angular-growl', 'ui.bootstrap']);
 
 //Growl configuraton
 zeusModule.config(['growlProvider', function(growlProvider) {
