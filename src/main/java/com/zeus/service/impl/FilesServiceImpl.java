@@ -77,7 +77,7 @@ public class FilesServiceImpl implements FilesService{
 
 	@Override
 	public List<BuildDetails> getBuildHistory(String file, String path) throws Exception {
-		return buildDetailsRepository.findByNameAndPath(file, path);
+		return buildDetailsRepository.findByNameAndPathOrderByUpdatedAtDesc(file, path);
 	}
 	
 	@Override

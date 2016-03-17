@@ -32,6 +32,9 @@
 	padding:20px;
 	text-align:center;
 }
+#history{
+	font-size : 12px;
+}
 
 .popover-content {
     word-break: break-all;

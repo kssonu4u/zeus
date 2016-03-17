@@ -1,126 +1,298 @@
- <div class = "col-lg-8 col-lg-offset-2 border" ng-controller="MainCtrl" ng-init="getFiles('builder')">
-  <div class="jumbotron">
-    <h2>Directory Details</h2> 
-  </div> 
-  <breadcrumb></breadcrumb>
-  <table class="table table-hover">
-    <thead>
-     <tr>
-      <th> Name </th>
-      <th> Size </th>
-      <th> Location </th>
-      <th> Action </th>
-     </tr>
-    </thead>
-    <tr ng-repeat = "content in result">
-       <td>
-         <div ng-if = "content.type =='dir'">
-         	<a ng-click="getFiles(content.path + '/' + content.name)"  ng-class="'folder'"> {{content.name}}  </a> [contains {{content.contentCount}} files]
-         </div>
-         <div ng-if = "content.type == 'file' ">
-         	<a ng-click = "showDetails(content.path + '/' + content.name)" ng-class="'file'"> {{content.name}}</a>
-         </div>
-       </td>
-       <td>{{content.size}}</td>
-       <td>{{content.path}} </td>
-       <td>
-        <div>
-		    <button class="btn btn-sm btn-default"  ng-show = "content.type == 'file'" ng-click="moveToArchive(item)" title="move to archive">
-		        <i class="glyphicon glyphicon-log-out"></i>
-		    </button>
-		    <button class="btn btn-sm btn-default"  ng-show = "content.type == 'file' && (content.name.indexOf('.war')  > -1 || content.name.indexOf('.jar')  > -1)" ng-click="details(content.name, content.path)" title="details">
-		        <i class="glyphicon glyphicon-picture"></i>
-		    </button>
-			<button class="btn btn-sm btn-success"  ng-show = "content.type == 'file' && (content.name.indexOf('.war')  > -1 || content.name.indexOf('.jar')  > -1)" ng-click = "buildSection(content.name, content.path)" title="build">
-		        <i class="glyphicon glyphicon-tower"></i>
-		    </button>
-		    <button class="btn btn-sm btn-danger"   ng-show = "content.type == 'file'" ng-click="delete(content.name, content.path)" title="remove">
-		        <i class="glyphicon glyphicon-trash"></i>
-		    </button>
-		</div>
-       </td>
-    </tr>
-  </table>
-</div>
-<div class="clearfix"></div>
-<div ng-controller="BuildController">  
-    <div class="container-fluid">
-  		<div class="row-fluid">
-  		    <div class="col-lg-1">
-  		    	<button type="button" ng-click="showProcesses()" class="btn btn-default">Toggle Process List</button>
-  		    </div>
-    		<div class="col-lg-4 col-lg-offset-1 border" ng-show = "processDetailsList.length > 0 && showProcessList">
-				<div class="jumbotron">
-		    		<h2>Process List</h2> 
-		    	</div>
-		    	<table class="table table-hover">
-				    <thead>
-				     <tr>
-				      <th> Name </th>
-				      <th> Process Id </th>
-				      <th> User </th>
-				      <th> Start Time </th>
-				      <th> Actions </th>
-				     </tr>
-				    </thead>
-				    <tr ng-repeat = "process in processDetailsList">
-				       <td>{{process.name | limitTo:40}}
-				       <p uib-popover="{{process.name}}" popover-trigger="mouseenter" type="button" class="btn btn-default">....more</p>
-				       </td>
-				       <td>{{process.pid}}</td>
-				       <td>{{process.user}} </td>
-				       <td>{{process.stime}} </td>
-				       <td>
-					     <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#delete"  ng-click="killProcess(process.pid)" title="kill">
-					        <i class="glyphicon glyphicon-remove"></i>
-					     </button>
-				       </td>
-				    </tr>
-				</table>
-			</div>
-    		<div ng-show = "buildDetails.name && showBuildSection" class="col-lg-4 col-lg-offset-1 border">
-				<div class="jumbotron">
-		    		<h2>Build Options</h2> 
-		    	</div> 
-	   			 <form class="form-horizontal" ng-submit="build()">
-					 <div class="form-group">
-					   <label for="buildName" class="col-sm-3 control-label">Build Name : </label>
-					   <p class="form-control-static">{{buildDetails.name}}</p>
-					 </div>
-					 <div class="form-group">
-					   <label for="buildName" class="col-sm-3 control-label">Build Path : </label>
-					   <p class="form-control-static">{{buildDetails.path}}</p>
-					 </div>
-					 <div class="form-group">
-					   <label for="env" class="col-sm-3 control-label">Build Environment : </label>
-					   <div class="col-sm-4">
-						   <select class="form-control" ng-model="buildDetails.environment" id="environment" >
-						     <option value="development">Development</option>
-						     <option value="staging">Staging</option>
-						     <option value="production">Production</option>
-						   </select>
-					   </div>
-					 </div>
-					 <div class="form-group">
-					   <label for="email" class="col-sm-3 control-label">Email : </label>
-					   <div class="col-sm-8">
-					     <input type="email" class="form-control" ng-model = "buildDetails.email" id="email" placeholder="Email" required>
-					   </div>
-					 </div>
-					 <div class="form-group">
-					   <label for="comment" class="col-sm-3 control-label">Comment : </label>
-					   <div class="col-sm-8">
-					     <textarea class="form-control" rows="5" ng-model = "buildDetails.comments" id="comment" required></textarea>
-					   </div>
-					 </div>
-					 <div class="form-group">
-					   <div class="col-sm-offset-2 col-sm-10">
-					     <button type="submit" class="btn btn-success">Build</button>
-					     <button type="button" ng-click="showBuildSection = false" class="btn btn-default">Cancel</button>
-					   </div>
-					 </div>
-				 </form>
-			</div>
-		</div>
-	</div>
-</div>
+         <div id="page-wrapper">
+            <div class="row">
+                <div class="col-sm-12">
+                    <h3 class="page-header"></h3>
+                </div>
+                <!-- /.col-lg-12 -->
+            </div>
+            <!-- /.row -->
+            <div class="row hide">
+                <div class="col-lg-3 col-md-6">
+                    <div class="panel panel-primary">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-3">
+                                    <i class="fa fa-comments fa-5x"></i>
+                                </div>
+                                <div class="col-xs-9 text-right">
+                                    <div class="huge">26</div>
+                                    <div>New Comments!</div>
+                                </div>
+                            </div>
+                        </div>
+                        <a href="#">
+                            <div class="panel-footer">
+                                <span class="pull-left">View Details</span>
+                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                                <div class="clearfix"></div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="panel panel-green">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-3">
+                                    <i class="fa fa-tasks fa-5x"></i>
+                                </div>
+                                <div class="col-xs-9 text-right">
+                                    <div class="huge">12</div>
+                                    <div>New Tasks!</div>
+                                </div>
+                            </div>
+                        </div>
+                        <a href="#">
+                            <div class="panel-footer">
+                                <span class="pull-left">View Details</span>
+                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                                <div class="clearfix"></div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="panel panel-yellow">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-3">
+                                    <i class="fa fa-shopping-cart fa-5x"></i>
+                                </div>
+                                <div class="col-xs-9 text-right">
+                                    <div class="huge">124</div>
+                                    <div>New Orders!</div>
+                                </div>
+                            </div>
+                        </div>
+                        <a href="#">
+                            <div class="panel-footer">
+                                <span class="pull-left">View Details</span>
+                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                                <div class="clearfix"></div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <div class="panel panel-red">
+                        <div class="panel-heading">
+                            <div class="row">
+                                <div class="col-xs-3">
+                                    <i class="fa fa-support fa-5x"></i>
+                                </div>
+                                <div class="col-xs-9 text-right">
+                                    <div class="huge">13</div>
+                                    <div>Support Tickets!</div>
+                                </div>
+                            </div>
+                        </div>
+                        <a href="#">
+                            <div class="panel-footer">
+                                <span class="pull-left">View Details</span>
+                                <span class="pull-right"><i class="fa fa-arrow-circle-right"></i></span>
+                                <div class="clearfix"></div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <!-- /.row -->
+            <div class="row">
+                <div class="col-lg-6">
+                <!-- Directory Panel -->
+                    <div class="panel panel-default" ng-controller="DirectoryController" ng-init="getFiles('builder')">
+                        <div class="panel-heading">
+                            <i class="fa fa-bar-chart-o fa-fw"></i> Directory Details
+                            <div class="pull-right">
+                           		<button class="btn btn-xs btn-success"  ng-click="getFiles('builder')" title="refresh">
+							        <i class="fa fa-refresh fa-spin"></i>
+							    </button>
+                                <button class="btn btn-xs btn-danger"  ng-show = "result.length > 0" ng-click="showDirectoryDetails = !showDirectoryDetails" title="close">
+							        <i class="fa fa-times"></i>
+							    </button>
+                            </div>
+                        </div>
+                        <!-- /.panel-heading -->
+                        <div class="panel-body" ng-show = "showDirectoryDetails">
+                            <div>
+                               <breadcrumb></breadcrumb>
+							  <table class="table table-hover">
+							    <thead>
+							     <tr>
+							      <th> Name </th>
+							      <th> Size </th>
+							      <th> Location </th>
+							      <th> Action </th>
+							     </tr>
+							    </thead>
+							    <tr ng-repeat = "content in result">
+							       <td>
+							         <div ng-if = "content.type =='dir'">
+							         	<a ng-click="getFiles(content.path + '/' + content.name)"  ng-class="'folder'"> {{content.name}}  </a> [contains {{content.contentCount}} files]
+							         </div>
+							         <div ng-if = "content.type == 'file' ">
+							         	<p ng-click = "showDetails(content.path + '/' + content.name)" ng-class="'file'"> {{content.name}}</p>
+							         </div>
+							       </td>
+							       <td>{{content.size}}</td>
+							       <td>{{content.path}} </td>
+							       <td>
+							        <div>
+									    <button class="btn btn-sm btn-default"  ng-show = "content.type == 'file'" ng-click="moveToArchive(item)" title="move to archive">
+									        <i class="glyphicon glyphicon-log-out"></i>
+									    </button>
+									    <button class="btn btn-sm btn-default"  ng-show = "content.type == 'file' && (content.name.indexOf('.war')  > -1 || content.name.indexOf('.jar')  > -1)" ng-click="details(content.name, content.path)" title="details">
+									        <i class="glyphicon glyphicon-picture"></i>
+									    </button>
+										<button class="btn btn-sm btn-success"  ng-show = "content.type == 'file' && (content.name.indexOf('.war')  > -1 || content.name.indexOf('.jar')  > -1)" ng-click = "buildSection(content.name, content.path)" title="build">
+									        <i class="glyphicon glyphicon-tower"></i>
+									    </button>
+									    <button class="btn btn-sm btn-danger"   ng-show = "content.type == 'file'" ng-click="delete(content.name, content.path)" title="remove">
+									        <i class="glyphicon glyphicon-trash"></i>
+									    </button>
+									</div>
+							       </td>
+							    </tr>
+							  </table>
+                            </div>
+                        </div>
+                        <!-- /.panel-body -->
+                    </div>
+                    <!-- /.panel -->
+                     <!-- Running Process Panel -->
+                    <div class="panel panel-default" ng-controller="ProcessController" ng-init="getProcessList()">
+                        <div class="panel-heading">
+                            <i class="fa fa-hourglass-half"></i>
+                            Running Processes
+                            <div class="pull-right">
+                           		<button class="btn btn-xs btn-success"  ng-click="getProcessList()" title="refresh">
+							        <i class="fa fa-refresh fa-spin"></i>
+							    </button>
+                                <button class="btn btn-xs btn-danger"  ng-show = "processDetailsList" ng-click="showProcessList = !showProcessList" title="close">
+							        <i class="fa fa-times"></i>
+							    </button>
+                            </div>
+                        </div>
+                        <!-- /.panel-heading -->
+                        <div class="panel-body" ng-show = "showProcessList">
+	                        <table class="table table-hover">
+							    <thead>
+							     <tr>
+							      <th> Name </th>
+							      <th> Process Id </th>
+							      <th> User </th>
+							      <th> Start Time </th>
+							      <th> Actions </th>
+							     </tr>
+							    </thead>
+							    <tr ng-repeat = "process in processDetailsList">
+							       <td>{{process.name | limitTo:30}}
+							       <p popover-placement="right" uib-popover="{{process.name | limitTo:350}}" popover-trigger="outsideClick" type="button" class="btn btn-sm btn-default">....more</p>
+							       </td>
+							       <td>{{process.pid}}</td>
+							       <td>{{process.user}} </td>
+							       <td>{{process.stime}} </td>
+							       <td>
+								     <button class="btn btn-sm btn-danger" data-toggle="modal" data-target="#delete"  ng-click="killProcess(process.pid)" title="kill">
+								        <i class="glyphicon glyphicon-remove"></i>
+								     </button>
+							       </td>
+							    </tr>
+							</table>
+                        </div>
+                        <!-- /.panel-body -->
+                    </div>
+                    <!-- /.panel -->
+                </div>
+                <!-- /.col-lg-8 -->
+                <div ng-controller="BuildController">
+	                <div class="col-lg-4">
+	                    <div class="panel panel-default">
+	                        <div class="panel-heading">
+	                            <i class="fa fa-rocket"></i> Build Options
+	                            <div class="pull-right">
+		                            <button class="btn btn-xs btn-danger"  ng-show = "buildDetails.name" ng-click="showBuildSection = !showBuildSection" title="close">
+								        <i class="fa fa-times"></i>
+								    </button>
+							    </div>
+	                        </div>
+	                        <!-- /.panel-heading -->
+	                        <div class="panel-body" ng-show = "buildDetails.name && showBuildSection">
+								<div class="list-group">
+									 <form ng-submit="build()">
+									  <div class="form-group row">
+									    <label class="col-sm-3 form-control-label">Build Name</label>
+									    <div class="col-sm-9">
+									      <p class="form-control-static">{{buildDetails.name}}</p>
+									    </div>
+									  </div>
+									  <div class="form-group row">
+									    <label class="col-sm-3 form-control-label">Build Path</label>
+									    <div class="col-sm-9">
+									      <p class="form-control-static">{{buildDetails.path}}</p>
+									    </div>
+									  </div>
+									  <div class="form-group row">
+									    <label class="col-sm-3 form-control-label">Environment</label>
+									    <div class="col-sm-9">
+									      <select class="form-control" ng-model="buildDetails.environment" id="environment" >
+											 <option value="development">Development</option>
+											 <option value="staging">Staging</option>
+											 <option value="production">Production</option>
+										  </select>
+									    </div>
+									  </div>
+									  <div class="form-group row">
+									    <label for="inputEmail" class="col-sm-3 form-control-label">Email</label>
+									    <div class="col-sm-9">
+									      <input type="email" ng-model = "buildDetails.email" class="form-control" id="email" placeholder="Email" required>
+									    </div>
+									  </div>
+									  <div class="form-group row">
+									    <label class="col-sm-3 form-control-label">Comments</label>
+									    <div class="col-sm-9">
+									      <textarea class="form-control" rows="5" ng-model = "buildDetails.comments" id="comment" required></textarea>
+									    </div>
+									  </div>
+									  <div class="form-group row">
+									    <button type="submit" class="col-sm-offset-3 col-sm-3 btn btn-success">Build</button>
+									    <button type="button" ng-click="showBuildSection = false" class="col-sm-offset-1 col-sm-3 btn btn-default">Cancel</button>
+									  </div>
+									</form>
+								</div>
+							</div>
+	                        <!-- /.panel-body -->
+	                    </div>
+	                    <!-- /.panel -->
+	                </div>
+	                <div class="col-lg-2">
+	                    <div class="panel panel-default" >
+	                        <div class="panel-heading">
+	                            <i class="fa fa-clock-o fa-fw"></i> Build History
+	                            <div class="pull-right">
+		                            <button class="btn btn-xs btn-danger"  ng-show = "buildHistory" ng-click="showCommentsSection = !showCommentsSection" title="close">
+								        <i class="fa fa-times"></i>
+								    </button>
+							    </div>
+	                        </div>
+	                        <!-- /.panel-heading -->
+	                        <div class="panel-body" ng-show = "buildHistory && showCommentsSection">
+	                            <div class="list-group">
+	                                <div id="history" ng-repeat = "history in buildHistory">
+                                         <strong>{{history.environment}}</strong> - {{history.email}}<br> 
+                                         {{history.comments}}
+                                        <span class="pull-right text-muted small"><em>{{history.updatedAt |  date:'medium'}}</em></span>
+                                        <hr>
+	                                </div>
+	                            </div>
+	                        </div>
+	                        <!-- /.panel-body -->
+	                    </div>
+	                </div>
+                </div>
+                <!-- /.col-lg-4 -->
+            </div>
+            <!-- /.row -->
+        </div>
+        <!-- /#page-wrapper -->
+ 

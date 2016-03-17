@@ -4,14 +4,14 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
- * @author Amit Kumar
+ * @author Navneet Singh
  * @since 1.0
  */
 @SpringBootApplication
-public class Application {
+public class ZeusApplication {
 	
 	public static void main( String[] args ) {
-        SpringApplication.run(Application.class, args);
+        SpringApplication.run(ZeusApplication.class, args);
     }
 	
 }

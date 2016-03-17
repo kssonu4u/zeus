@@ -10,34 +10,36 @@
 	<script type="text/javascript" src="vendor/angular-translate.js"></script>
 	<script type="text/javascript" src="vendor/angular-growl.js"></script>
 	<script type="text/javascript" src="vendor/ui-bootstrap-tpls-1.2.4.js"></script>
+	<script type="text/javascript" src="vendor/sbadmin-2/sb-admin-2.js/"></script>
 	<script type="text/javascript" src="config/router.js"></script>
-		
 		
 	<link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css" rel="stylesheet">
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
 	<link rel="stylesheet" href="vendor/angular-growl.css">
+	<link rel="stylesheet" href="vendor/sbadmin-2/sb-admin-2.css">
+	<link rel="stylesheet" href="vendor/sbadmin-2/timeline.css">
 	<link rel="stylesheet" href="src/zeus/app/app.css">
 	
 	
 
 	<title>Zeus-The builder</title>
 </head>
-	<body>
-		<nav class="navbar navbar-default ">
-		<div class="container-fluid">
-			<!-- Brand and toggle get grouped for better mobile display -->
-			<div class="navbar-header">
-				<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
-					<span class="sr-only">Toggle navigation</span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-					<span class="icon-bar"></span>
-				</button>
-				<a class="navbar-brand" href="#">Zeus</a>
-			</div>
-		</div><!-- /.container-fluid -->
-	</nav>
+  <body>
+	<div id="wrapper">
+        <!-- Navigation -->
+        <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="index.html">Zeus</a>
+            </div>
+        </nav>
 	   <div growl></div>
 	   <div ui-view ></div>
-	</body>
+	</div>   
+  </body>
 </html>

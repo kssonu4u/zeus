@@ -8,7 +8,7 @@ zeusModule.config(['growlProvider', function(growlProvider) {
 }]);
 
 
-zeusModule.service('BuildService', function($http, $rootScope) {
+zeusModule.service('BuildService', function($http, $rootScope, $q) {
     var service = this;
     var buildDetails = {};
     
@@ -20,25 +20,57 @@ zeusModule.service('BuildService', function($http, $rootScope) {
         });
     }
     
+    service.refreshProcesses = function(){
+    	$rootScope.$broadcast('refreshProcesses');
+    }
+    
+    service.getDirectoryData = function(directory){
+    	var defer = $q.defer();
+    	$http({
+			url : "/files",
+			method : "GET",
+			params : {directory : directory}
+		}).success(function(response) {
+     		defer.resolve(response);
+     	})
+        return defer.promise;
+    }
+    
+    service.getBuildHistory = function(name, path){
+    	var defer = $q.defer();
+		$http({
+			url : "/build_history",
+			method : "GET",
+			params : {file : name, path : path} 
+		}).success(function(response) {
+			defer.resolve(response);
+     	});
+		
+		return defer.promise;
+	}
+    
+    service.getProcessDetails = function(){
+    	var defer = $q.defer();
+		$http.get("/show_java_processes").success(function(response){
+			defer.resolve(response);
+		});
+		return defer.promise;
+	}
+    
     service.getBuildDetails = function(){
     	return buildDetails;
     }
     
 });
 
-zeusModule.controller('MainCtrl', function(BuildService, $scope, $http, $state, growl) {
+zeusModule.controller('DirectoryController', function(BuildService, $scope, $http, $state, growl) {
 
+	$scope.showDirectoryDetails = true;
 	$scope.getFiles = function(directory){
 		$scope.directoryPath = directory;
-		$http({
-			url : "/files",
-			method : "GET",
-			params : {directory : directory} 
-		}).success(function(response) {
-     		$scope.result = response;
-     	}).error(function(response){
-     		growl.error("Error in loading data");
-     	});
+		BuildService.getDirectoryData(directory).then(function(data){
+			$scope.result = data;
+		});
 	}
 	
 	$scope.buildSection = function(name, path){
@@ -52,8 +84,7 @@ zeusModule.controller('BuildController', function(BuildService, $scope, $http, $
         loadBuildData();
     })
     
-	$scope.showProcessList = false;
-	$scope.showBuildSection = false;
+	$scope.showBuildSection = true;
 	
 	loadBuildData = function(){
 		var details = BuildService.getBuildDetails();
@@ -61,31 +92,16 @@ zeusModule.controller('BuildController', function(BuildService, $scope, $http, $
 			$scope.buildDetails = details;
 			$scope.buildDetails.environment = 'development';
 			$scope.buildDetails.comments = "Building file.";
-			//check the other java processes if running
-			$scope.showProcessList = true;
+			$scope.showCommentsSection = true;
 			$scope.showBuildSection = true;
-			getProcessDetails();
-			getBuildHistory($scope.buildDetails.name, $scope.buildDetails.path);
-			
+			loadComments($scope.buildDetails.name, $scope.buildDetails.path);
 		}
 	}
 	
-	getBuildHistory = function(name, path){
-		$http({
-			url : "/build_history",
-			method : "GET",
-			params : {file : name, path : path} 
-		}).success(function(response) {
-     		$scope.buildHistory = response;
-     	}).error(function(response){
-     		growl.error('Error in loading build history.');
-     	});
-	}
-	
-	$scope.showProcesses = function(){
-		$scope.showProcessList = !$scope.showProcessList;
-		if($scope.showProcessList)
-		 getProcessDetails();
+	loadComments = function(buildName, buildPath){
+		BuildService.getBuildHistory(buildName, buildPath).then(function(data){
+			$scope.buildHistory = data;
+		});
 	}
 	
 	$scope.build = function(){
@@ -94,21 +110,39 @@ zeusModule.controller('BuildController', function(BuildService, $scope, $http, $
 	        method: "POST",
 	        data: JSON.stringify($scope.buildDetails),
 	    }).success(function(response) {
+	    	loadComments($scope.buildDetails.name, $scope.buildDetails.path);
+	    	BuildService.refreshProcesses();
 	    	growl.success("Build deployed successfully");	
 		}).error(function(response){
 			growl.error("Build deployment unsuccessful");
 		});
-
 	}
-		
-	getProcessDetails = function(){
-		$http.get("/show_java_processes").success(function(response){
-			if(response.length > 0){
-				$scope.processDetailsList = response;
-			}
-		}).error(function(response){
-			growl.error("Error in loading process data");
-	 	});
+	
+});
+
+zeusModule.controller('ProcessController', function(BuildService, $scope, $http, $state, growl) {
+	$scope.showProcessList = true;
+	
+	$scope.$on('refreshProcesses', function(event, data) {
+		BuildService.getProcessDetails().then(function(data){
+			$scope.processDetailsList = data;
+		});	
+    })
+	
+	
+	$scope.getProcessList = function(){
+		BuildService.getProcessDetails().then(function(data){
+			$scope.processDetailsList = data;
+		});	
+	}
+	
+	$scope.showProcesses = function(){
+		$scope.showProcessList = !$scope.showProcessList;
+		if($scope.showProcessList){
+			BuildService.getProcessDetails().then(function(data){
+				$scope.processDetailsList = data;
+			});
+		}
 	}
 	
 	$scope.killProcess = function(pid){
@@ -116,7 +150,7 @@ zeusModule.controller('BuildController', function(BuildService, $scope, $http, $
 	    if (r == true) {
 	    	$http.get("/kill_process/" + pid).success(function(response){
 				growl.success("Process killed successfully");
-				getProcessDetails();
+				$scope.getProcessList();
 			}).error(function(response){
 				growl.error("Process kill unsuccessful");
 		 	});
@@ -124,7 +158,6 @@ zeusModule.controller('BuildController', function(BuildService, $scope, $http, $
 	        alert("Phewww. You saved it.");
 	    }
 	}
-	
 });
 
 zeusModule.directive('breadcrumb', function() {

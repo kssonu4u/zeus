@@ -9,5 +9,5 @@ import com.zeus.model.BuildDetails;
 public interface BuildDetailsRepository extends CrudRepository<BuildDetails, Integer>{
    
 	public List<BuildDetails> findByName(String name);
-	public List<BuildDetails> findByNameAndPath(String name, String path);
+	public List<BuildDetails> findByNameAndPathOrderByUpdatedAtDesc(String name, String path);
 }
