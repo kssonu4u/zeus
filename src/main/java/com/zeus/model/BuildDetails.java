@@ -38,12 +38,12 @@ public class BuildDetails {
 	private String comments;
 
 	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name = "created_at", nullable = false, length = 0)	
+	@Column(name = "created_at", nullable = true, length = 0)	
 	private Date createdAt;
 	
 
 	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name = "updated_at", nullable = false, length = 0)
+	@Column(name = "updated_at", nullable = true, length = 0)
 	private Date updatedAt;
 	
 	public BuildDetails(){

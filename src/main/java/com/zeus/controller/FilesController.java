@@ -7,6 +7,8 @@ import java.nio.file.FileSystemException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.json.JSONObject;
@@ -29,8 +31,6 @@ public class FilesController {
 	@Value("${base.directory.path}")
 	private String baseDirectoryPath;
 
-	private static final String ARCHIVE = "archive"; 
-	private static final String LIVE = "live";
 	private static final Logger logger = LogManager.getLogger(FilesController.class);
    
 	@RequestMapping(value="/files", method = RequestMethod.GET)
@@ -44,11 +44,7 @@ public class FilesController {
 		}
 	}
 	
-	public void moveFile(@RequestParam(value = "source", required = true ) String source, @RequestParam(value = "destination", required = true) String destination) throws Exception{
-		filesService.moveFile(source, destination);
-	}
-	
-	@RequestMapping(value="/build_history")
+	@RequestMapping(value="/build_history", method = RequestMethod.GET)
 	public @ResponseBody List<BuildDetails> buildHistory(@RequestParam(value="file", required = true) String file, @RequestParam(value="path", required = true) String path) throws Exception{
 		try{
 			return filesService.getBuildHistory(file, path);
@@ -120,6 +116,41 @@ public class FilesController {
 			}
 		}catch(Exception e){
 			logger.error(String.format("Error in killing process. Pid = %s, Exception message = %s", pid, e.getMessage()) , e);
+			throw e;
+		}
+		
+	}
+	
+	@RequestMapping(value="/download", method = RequestMethod.GET)
+	public void download(@RequestParam(value="file", required = true) String file, 
+			                                         @RequestParam(value="path", required = true) String path,  
+			                                         HttpServletResponse response) throws Exception{
+		try{
+			 filesService.download(file, path, response);
+		}catch(Exception e){
+			logger.error(String.format("Error in downloading. File : %s, Path : %s", file, path), e);
+			throw e;
+		}
+		
+	}
+	
+	@RequestMapping(value="/delete", method = RequestMethod.DELETE)
+	public void deleteResource(@RequestParam(value="file", required = true) String file, @RequestParam(value="path", required = true) String path) throws Exception{
+		try{
+			 filesService.deleteResource(file, path);
+		}catch(Exception e){
+			logger.error(String.format("Error in deleting resource. File : %s, Path : %s", file, path), e);
+			throw e;
+		}
+		
+	}
+	
+	@RequestMapping(value="/move_resource", method = RequestMethod.POST)
+	public void moveResource(@RequestParam(value="file", required = true) String file, @RequestParam(value="path", required = true) String path) throws Exception{
+		try{
+			 filesService.moveFileToArchive(file, path);
+		}catch(Exception e){
+			logger.error(String.format("Error in deleting resource. File : %s, Path : %s", file, path), e);
 			throw e;
 		}
 		

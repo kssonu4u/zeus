@@ -138,8 +138,11 @@
 							       <td>{{content.path}} </td>
 							       <td>
 							        <div>
-									    <button class="btn btn-sm btn-default"  ng-show = "content.type == 'file'" ng-click="moveToArchive(item)" title="move to archive">
+									    <button class="btn btn-sm btn-default"  ng-show = "content.type == 'file' && content.path.indexOf('archive') < 0" ng-click="moveToArchive(content.name, content.path)" title="move to archive">
 									        <i class="glyphicon glyphicon-log-out"></i>
+									    </button>
+									    <button class="btn btn-sm btn-default"  ng-show = "content.type == 'file'" ng-click="download(content.name, content.path)" title="download">
+									        <i class="glyphicon glyphicon-download-alt"></i>
 									    </button>
 									    <button class="btn btn-sm btn-default"  ng-show = "content.type == 'file' && (content.name.indexOf('.war')  > -1 || content.name.indexOf('.jar')  > -1)" ng-click="details(content.name, content.path)" title="details">
 									        <i class="glyphicon glyphicon-picture"></i>
@@ -147,11 +150,14 @@
 										<button class="btn btn-sm btn-success"  ng-show = "content.type == 'file' && (content.name.indexOf('.war')  > -1 || content.name.indexOf('.jar')  > -1)" ng-click = "buildSection(content.name, content.path)" title="build">
 									        <i class="glyphicon glyphicon-tower"></i>
 									    </button>
-									    <button class="btn btn-sm btn-danger"   ng-show = "content.type == 'file'" ng-click="delete(content.name, content.path)" title="remove">
+									    <button class="btn btn-sm btn-danger"   ng-show = "content.type == 'file'" ng-click="deleteFile(content.name, content.path)" title="delete">
 									        <i class="glyphicon glyphicon-trash"></i>
 									    </button>
 									</div>
 							       </td>
+							    </tr>
+							    <tr ng-show="result.length < 1">
+							       <td style = "color:red;">No files present.</td>
 							    </tr>
 							  </table>
                             </div>

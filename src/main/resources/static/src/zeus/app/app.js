@@ -7,6 +7,51 @@ zeusModule.config(['growlProvider', function(growlProvider) {
     growlProvider.globalReversedOrder(true);
 }]);
 
+zeusModule.service('DirectoryService', function($http, $rootScope, $q){
+    var service = this;
+    
+    service.deleteFile = function(name, path){
+    	var defer = $q.defer();
+    	$http({
+    		url : "/delete",
+    		method : "DELETE",
+    		params : {file : name, path : path}
+    	}).success(function(response){
+            defer.resolve(response);    	   	
+    	}).error(function(response){
+    		defer.reject(response);
+    	});
+    	
+    	return defer.promise;
+    }
+    
+    service.moveFile = function(name, path){
+    	var defer = $q.defer();
+    	$http({
+    		url : "/move_resource",
+    		method : "POST",
+    		params : {file : name, path : path}
+    	}).success(function(response){
+            defer.resolve(response);    	   	
+    	}).error(function(response){
+    		defer.reject(response);
+    	});
+    	
+    	return defer.promise;
+    }
+    
+    service.getDirectoryData = function(directory){
+    	var defer = $q.defer();
+    	$http({
+			url : "/files",
+			method : "GET",
+			params : {directory : directory}
+		}).success(function(response) {
+     		defer.resolve(response);
+     	})
+        return defer.promise;
+    }
+})
 
 zeusModule.service('BuildService', function($http, $rootScope, $q) {
     var service = this;
@@ -22,18 +67,6 @@ zeusModule.service('BuildService', function($http, $rootScope, $q) {
     
     service.refreshProcesses = function(){
     	$rootScope.$broadcast('refreshProcesses');
-    }
-    
-    service.getDirectoryData = function(directory){
-    	var defer = $q.defer();
-    	$http({
-			url : "/files",
-			method : "GET",
-			params : {directory : directory}
-		}).success(function(response) {
-     		defer.resolve(response);
-     	})
-        return defer.promise;
     }
     
     service.getBuildHistory = function(name, path){
@@ -63,18 +96,60 @@ zeusModule.service('BuildService', function($http, $rootScope, $q) {
     
 });
 
-zeusModule.controller('DirectoryController', function(BuildService, $scope, $http, $state, growl) {
+zeusModule.controller('DirectoryController', function(BuildService, DirectoryService, $scope, $http, $state, growl) {
 
 	$scope.showDirectoryDetails = true;
+	
 	$scope.getFiles = function(directory){
 		$scope.directoryPath = directory;
-		BuildService.getDirectoryData(directory).then(function(data){
+		DirectoryService.getDirectoryData(directory).then(function(data){
 			$scope.result = data;
 		});
 	}
 	
 	$scope.buildSection = function(name, path){
 		BuildService.setBuildDetails(name, path);
+	}
+	
+	$scope.download = function(name, path){
+		$http({
+			url : "/download",
+			method : "GET",
+			responseType: "arraybuffer",
+			params : {file : name, path : path}
+		}).success(function(data, status, headers, config) {
+            var file = new Blob([ data ], {
+                type : 'application/octet-stream'
+            });
+            //trick to download store a file having its URL
+            var fileURL = URL.createObjectURL(file);
+            var a         = document.createElement('a');
+            a.href        = fileURL; 
+            a.target      = '_blank';
+            a.download    = name;
+            document.body.appendChild(a);
+            a.click();
+        }).error(function(error){
+            growl.error("Unable to download file.");
+        });
+	}
+	
+	$scope.deleteFile = function(name, path){
+		DirectoryService.deleteFile(name, path).then(function(success_response){
+			growl.success(name + " file deleted successfully.");
+			$scope.getFiles($scope.directoryPath);
+		}, function(error_response){
+			growl.error("Unable to delete file : " + name + ". Please try again.");
+		});
+	}
+	
+	$scope.moveToArchive = function(name, path){
+		DirectoryService.moveFile(name, path).then(function(success_response){
+			growl.success(name + " File moved to archive successfully.");
+			$scope.getFiles($scope.directoryPath);
+		}, function(error_response){
+			growl.error(error_response.error_message + " Unable to move file : " + name + ". Please try again.");
+		});
 	}
 	
 });

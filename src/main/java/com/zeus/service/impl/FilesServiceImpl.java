@@ -1,13 +1,18 @@
 package com.zeus.service.impl;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
@@ -28,6 +33,9 @@ public class FilesServiceImpl implements FilesService{
 	@Value("${base.directory.path}")
 	private String baseDirectoryPath;
 	private String DATE_FORMAT = "EEE, d MMM yyyy HH:mm:ss z";
+	private static final String ARCHIVE = "archive"; 
+	private static final String LIVE = "live";
+	private static final String BUILDER = "builder";
 	
 	@Override
 	public List<JSONObject> getFilesAndAttributes(String path) {
@@ -69,9 +77,12 @@ public class FilesServiceImpl implements FilesService{
 	}
 
 	@Override
-	public void moveFile(String source, String destination) throws IOException {
+	public void moveFileToArchive(String file, String path) throws Exception {
 		FileAndDirectoryUtil fileAndDirectoryUtil = new FileAndDirectoryUtil();
-		fileAndDirectoryUtil.moveFile(baseDirectoryPath + source, baseDirectoryPath + destination);
+		if(path.contains(ARCHIVE)){
+			throw new Exception(file + " already is in archive.");
+		}
+		fileAndDirectoryUtil.moveFile(baseDirectoryPath + path + "/" + file, baseDirectoryPath + BUILDER + "/" + ARCHIVE + "/" + file);
 		
 	}
 
@@ -89,6 +100,33 @@ public class FilesServiceImpl implements FilesService{
 	@Autowired
 	BuildDetailsRepository buildDetailsRepository;
 	private static final Logger logger = LogManager.getLogger(FilesService.class);
+
+	@Override
+	public void download(String file, String path, HttpServletResponse httpServletResponse) throws Exception {
+		httpServletResponse.setContentType("application/octet-stream;charset=utf-8");
+        String headerKey = "Content-Disposition";
+        String headerValue = String.format("attachment; filename= \""+file +"\"");
+        httpServletResponse.setHeader(headerKey, headerValue);
+        try {
+            OutputStream output = httpServletResponse.getOutputStream();
+            FileInputStream fileIn = new FileInputStream(baseDirectoryPath + path + "/" + file);
+            byte[] outputByte = new byte[4096];
+              while(fileIn.read(outputByte, 0, 4096) != -1)
+              {
+               	output.write(outputByte, 0, 4096);
+              }
+            output.close();
+            fileIn.close();
+        } catch (IOException e) {
+            throw new Exception("Error in downloading file. " + e.getMessage());
+        }		
+	}
+	
+	@Override
+	public void deleteResource(String file, String path) throws FileNotFoundException{
+		FileAndDirectoryUtil fileAndDirectoryUtil = new FileAndDirectoryUtil();
+		fileAndDirectoryUtil.deleteResource(baseDirectoryPath + path + "/" + file);
+	}
 	
 	
 }
